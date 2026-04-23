@@ -1,4 +1,4 @@
-FROM postgres
+FROM postgres:18.1-trixie
 
 ENV POSTGRES_DB test
 
