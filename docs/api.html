@@ -92,10 +92,10 @@
   .nav-links a:hover { color: var(--ink); opacity: 1; }
   .nav-links a.active { color: var(--accent); }
 
-  .shell { max-width: 1100px; margin: 0 auto; padding: 64px 24px 120px; display: grid; grid-template-columns: 220px 1fr; gap: 0; }
+  .shell { max-width: 1100px; margin: 0 auto; padding: 64px 24px 120px; display: grid; grid-template-columns: 220px 1fr; gap: 0; align-items: start; }
   @media (max-width: 768px) { .shell { grid-template-columns: 1fr; } }
 
-  .sidebar { padding-right: 40px; padding-top: 4px; }
+  .sidebar { padding-right: 40px; padding-top: 4px; position: sticky; top: 72px; }
   @media (max-width: 768px) { .sidebar { display: none; } }
   .sidebar-label { font-family: var(--font-mono); font-size: 10px; font-weight: 600; letter-spacing: 0.16em; text-transform: uppercase; color: var(--ink-4); margin-bottom: 12px; }
   .sidebar ul { list-style: none; display: flex; flex-direction: column; gap: 2px; }
@@ -170,6 +170,14 @@
   .cm { color: var(--ink-4); }
   .st { color: #A5F3FC; }
 
+  /* ── ERD ── */
+  .erd-wrap { background: var(--surface-2); border: 1px solid var(--line); border-radius: var(--r-xl); padding: 24px 20px 14px; margin-bottom: 48px; overflow-x: auto; }
+  .erd-wrap svg a { cursor: pointer; }
+  .erd-wrap svg a:hover { filter: brightness(1.25); }
+  .erd-notes { margin-top: 14px; display: flex; flex-direction: column; gap: 6px; }
+  .erd-note { font-size: 12px; color: var(--ink-4); font-family: var(--font-mono); line-height: 1.55; padding: 0 2px; }
+  .erd-note strong { color: var(--ink-3); font-weight: 600; }
+
   footer { border-top: 1px solid var(--line); padding: 24px; text-align: center; font-family: var(--font-mono); font-size: 11px; color: var(--ink-4); letter-spacing: 0.06em; }
 </style>
 </head>
@@ -203,19 +211,185 @@
       <li><a href="#schedules">Schedules</a></li>
       <li><a href="#files">Files</a></li>
       <li><a href="#connectors">Connectors</a></li>
+      <li><a href="#memories">Memories</a></li>
+      <li><a href="#skills">Skills</a></li>
+      <li><a href="#scratchpads">Scratchpads</a></li>
       <li><a href="#search">Search</a></li>
     </ul>
   </aside>
 
   <main class="content">
     <div class="eyebrow">API Reference</div>
-    <h1>REST API</h1>
+    <h1 id="overview">REST API</h1>
     <p class="lede">
       The Cowork server exposes a versioned REST API at <code>/api/v1</code>.
       All endpoints return JSON.
     </p>
 
-    <div class="base-url" id="overview">
+    <!-- ERD -->
+    <div class="erd-wrap">
+      <svg viewBox="0 0 760 360" xmlns="http://www.w3.org/2000/svg" aria-label="Resource relationship diagram" style="width:100%;height:auto;display:block">
+        <defs>
+          <marker id="ah" markerWidth="9" markerHeight="9" refX="7" refY="4.5" orient="auto">
+            <path d="M1.5,1.5 L7,4.5 L1.5,7.5" stroke="#3A4F6E" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+          </marker>
+          <marker id="ah-d" markerWidth="9" markerHeight="9" refX="7" refY="4.5" orient="auto">
+            <path d="M1.5,1.5 L7,4.5 L1.5,7.5" stroke="#2A3957" stroke-width="1.2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+          </marker>
+        </defs>
+
+        <!-- ── Relationship lines (drawn behind boxes) ── -->
+
+        <!-- Project → Conversations -->
+        <path d="M 350,60 C 350,95 89,95 89,130" stroke="#2A3957" stroke-width="1.5" fill="none" marker-end="url(#ah)"/>
+        <text x="80" y="127" font-family="'JetBrains Mono',monospace" font-size="9" fill="#3A4F6E">N</text>
+
+        <!-- Project → Artifacts -->
+        <path d="M 350,60 C 350,95 260,95 260,130" stroke="#2A3957" stroke-width="1.5" fill="none" marker-end="url(#ah)"/>
+        <text x="251" y="127" font-family="'JetBrains Mono',monospace" font-size="9" fill="#3A4F6E">N</text>
+
+        <!-- Project → Schedules -->
+        <path d="M 350,60 C 350,95 415,95 415,130" stroke="#2A3957" stroke-width="1.5" fill="none" marker-end="url(#ah)"/>
+        <text x="407" y="127" font-family="'JetBrains Mono',monospace" font-size="9" fill="#3A4F6E">N</text>
+
+        <!-- Project → File (routes right of Schedules) -->
+        <path d="M 430,60 C 550,60 550,200 415,215" stroke="#2A3957" stroke-width="1.5" fill="none" marker-end="url(#ah)"/>
+        <text x="548" y="140" font-family="'JetBrains Mono',monospace" font-size="9" fill="#3A4F6E">N</text>
+
+        <!-- Conversation → File (optional, dashed) -->
+        <path d="M 89,186 C 89,215 415,211 415,215" stroke="#1E2A44" stroke-width="1.2" stroke-dasharray="5,3" fill="none" marker-end="url(#ah-d)"/>
+
+        <!-- "1" near Project bottom -->
+        <text x="356" y="75" font-family="'JetBrains Mono',monospace" font-size="9" fill="#3A4F6E">1</text>
+
+        <!-- Conversations → Responses -->
+        <path d="M 89,186 C 89,225 70,225 70,265" stroke="#2A3957" stroke-width="1.5" fill="none" marker-end="url(#ah)"/>
+        <text x="95" y="230" font-family="'JetBrains Mono',monospace" font-size="9" fill="#3A4F6E">N</text>
+        <text x="95" y="172" font-family="'JetBrains Mono',monospace" font-size="9" fill="#3A4F6E">1</text>
+
+        <!-- Conversations → Scratchpads -->
+        <path d="M 168,162 C 220,162 220,265 210,265" stroke="#2A3957" stroke-width="1.5" fill="none" marker-end="url(#ah)"/>
+        <text x="228" y="261" font-family="'JetBrains Mono',monospace" font-size="9" fill="#3A4F6E">N</text>
+
+        <!-- Scratchpad → Cells -->
+        <path d="M 278,288 C 320,288 320,303 330,310" stroke="#2A3957" stroke-width="1.5" fill="none" marker-end="url(#ah)"/>
+        <text x="340" y="306" font-family="'JetBrains Mono',monospace" font-size="9" fill="#3A4F6E">N</text>
+
+        <!-- Schedules → triggers → Conversations (dashed) -->
+        <path d="M 355,153 C 295,153 228,162 168,162" stroke="#1E2A44" stroke-width="1.2" stroke-dasharray="5,3" fill="none" marker-end="url(#ah-d)"/>
+        <text x="268" y="147" font-family="'JetBrains Mono',monospace" font-size="9" fill="#5C6B85" text-anchor="middle">triggers</text>
+
+        <!-- Project — Connectors (dashed, usable within) -->
+        <line x1="430" y1="37" x2="590" y2="37" stroke="#1E2A44" stroke-width="1.2" stroke-dasharray="5,3" marker-end="url(#ah-d)"/>
+
+        <!-- Project → Memory (optional, dashed 0..N) -->
+        <path d="M 430,60 C 490,60 490,101 590,101" stroke="#1E2A44" stroke-width="1.2" stroke-dasharray="5,3" fill="none" marker-end="url(#ah-d)"/>
+        <text x="510" y="76" font-family="'JetBrains Mono',monospace" font-size="9" fill="#3A465E" text-anchor="middle">0..N</text>
+
+        <!-- ── Entity boxes ── -->
+
+        <!-- Project (accent border) -->
+        <a href="#projects">
+          <rect x="270" y="14" width="160" height="46" rx="8" fill="#0A1420" stroke="rgba(34,211,238,0.18)" stroke-width="9"/>
+          <rect x="270" y="14" width="160" height="46" rx="8" fill="#0E1626" stroke="#22D3EE" stroke-width="1.5"/>
+          <text x="350" y="35" text-anchor="middle" font-family="'Inter',sans-serif" font-size="13" font-weight="700" fill="#F2F6FF" letter-spacing="0.2">Project</text>
+          <text x="350" y="51" text-anchor="middle" font-family="'JetBrains Mono',monospace" font-size="9" fill="#5C6B85">central workspace</text>
+        </a>
+
+        <!-- Connectors (dashed border = independent) -->
+        <a href="#connectors">
+          <rect x="590" y="14" width="148" height="46" rx="8" fill="#0E1626" stroke="#2A3957" stroke-width="1.5" stroke-dasharray="5,3"/>
+          <text x="664" y="35" text-anchor="middle" font-family="'Inter',sans-serif" font-size="13" font-weight="600" fill="#8A97AE">Connector</text>
+          <text x="664" y="51" text-anchor="middle" font-family="'JetBrains Mono',monospace" font-size="9" fill="#3A465E">independent</text>
+        </a>
+
+        <!-- Conversations / Tasks -->
+        <a href="#conversations">
+          <rect x="10" y="130" width="158" height="56" rx="8" fill="#0E1626" stroke="#1E2A44" stroke-width="1.5"/>
+          <text x="89" y="152" text-anchor="middle" font-family="'Inter',sans-serif" font-size="13" font-weight="600" fill="#F2F6FF">Conversation</text>
+          <rect x="19" y="159" width="50" height="17" rx="4" fill="rgba(34,211,238,0.12)" stroke="rgba(34,211,238,0.28)" stroke-width="1"/>
+          <text x="44" y="171" text-anchor="middle" font-family="'JetBrains Mono',monospace" font-size="9" font-weight="600" fill="#22D3EE">= Task</text>
+        </a>
+
+        <!-- Artifacts -->
+        <a href="#artifacts">
+          <rect x="195" y="130" width="130" height="56" rx="8" fill="#0E1626" stroke="#1E2A44" stroke-width="1.5"/>
+          <text x="260" y="152" text-anchor="middle" font-family="'Inter',sans-serif" font-size="13" font-weight="600" fill="#F2F6FF">Artifact</text>
+          <rect x="204" y="159" width="62" height="17" rx="4" fill="rgba(196,181,253,0.12)" stroke="rgba(196,181,253,0.28)" stroke-width="1"/>
+          <text x="235" y="171" text-anchor="middle" font-family="'JetBrains Mono',monospace" font-size="9" font-weight="600" fill="#C4B5FD">mini app</text>
+        </a>
+
+        <!-- Schedules -->
+        <a href="#schedules">
+          <rect x="355" y="130" width="120" height="46" rx="8" fill="#0E1626" stroke="#1E2A44" stroke-width="1.5"/>
+          <text x="415" y="157" text-anchor="middle" font-family="'Inter',sans-serif" font-size="13" font-weight="600" fill="#F2F6FF">Schedule</text>
+        </a>
+
+        <!-- Files (below Schedule) -->
+        <a href="#files">
+          <rect x="370" y="215" width="90" height="46" rx="8" fill="#0E1626" stroke="#1E2A44" stroke-width="1.5"/>
+          <text x="415" y="242" text-anchor="middle" font-family="'Inter',sans-serif" font-size="13" font-weight="600" fill="#F2F6FF">File</text>
+        </a>
+
+        <!-- Responses -->
+        <a href="#responses">
+          <rect x="10" y="265" width="120" height="46" rx="8" fill="#0E1626" stroke="#1E2A44" stroke-width="1.5"/>
+          <text x="70" y="292" text-anchor="middle" font-family="'Inter',sans-serif" font-size="13" font-weight="600" fill="#F2F6FF">Response</text>
+        </a>
+
+        <!-- Scratchpads (conversation-scoped) -->
+        <a href="#scratchpads">
+          <rect x="148" y="265" width="130" height="46" rx="8" fill="#0E1626" stroke="#1E2A44" stroke-width="1.5"/>
+          <text x="213" y="286" text-anchor="middle" font-family="'Inter',sans-serif" font-size="13" font-weight="600" fill="#F2F6FF">Scratchpad</text>
+          <text x="213" y="302" text-anchor="middle" font-family="'JetBrains Mono',monospace" font-size="9" fill="#5C6B85">ephemeral draft</text>
+        </a>
+
+        <!-- Cell (scratchpad-scoped) -->
+        <a href="#scratchpads">
+          <rect x="330" y="298" width="90" height="46" rx="8" fill="#0E1626" stroke="#1E2A44" stroke-width="1.5"/>
+          <text x="375" y="319" text-anchor="middle" font-family="'Inter',sans-serif" font-size="13" font-weight="600" fill="#F2F6FF">Cell</text>
+          <text x="375" y="335" text-anchor="middle" font-family="'JetBrains Mono',monospace" font-size="9" fill="#5C6B85">code · md · output</text>
+        </a>
+
+        <!-- Memory (optional project scope, solid border) -->
+        <a href="#memories">
+          <rect x="590" y="78" width="148" height="46" rx="8" fill="#0E1626" stroke="#1E2A44" stroke-width="1.5"/>
+          <text x="664" y="99" text-anchor="middle" font-family="'Inter',sans-serif" font-size="13" font-weight="600" fill="#F2F6FF">Memory</text>
+          <text x="664" y="115" text-anchor="middle" font-family="'JetBrains Mono',monospace" font-size="9" fill="#5C6B85">global or project</text>
+        </a>
+
+        <!-- Skills (global, dashed border like Connectors) -->
+        <a href="#skills">
+          <rect x="590" y="142" width="148" height="46" rx="8" fill="#0E1626" stroke="#2A3957" stroke-width="1.5" stroke-dasharray="5,3"/>
+          <text x="664" y="163" text-anchor="middle" font-family="'Inter',sans-serif" font-size="13" font-weight="600" fill="#8A97AE">Skill</text>
+          <text x="664" y="179" text-anchor="middle" font-family="'JetBrains Mono',monospace" font-size="9" fill="#3A465E">global</text>
+        </a>
+
+        <!-- "usable within" label — rendered last so it sits above boxes -->
+        <rect x="463" y="18" width="94" height="14" rx="3" fill="#0C1522" stroke="#1E2A44" stroke-width="0.75"/>
+        <text x="510" y="28.5" font-family="'JetBrains Mono',monospace" font-size="8.5" fill="#5C6B85" text-anchor="middle">usable within</text>
+
+        <!-- ── Legend (bottom-right, dotted box) ── -->
+        <rect x="492" y="210" width="250" height="98" rx="6" fill="rgba(8,13,24,0.88)" stroke="#2A3957" stroke-width="1" stroke-dasharray="4,3"/>
+        <text x="502" y="225" font-family="'JetBrains Mono',monospace" font-size="8" font-weight="600" fill="#3A465E" letter-spacing="0.12em">LEGEND</text>
+        <!-- owns 1..N -->
+        <line x1="502" y1="238" x2="522" y2="238" stroke="#2A3957" stroke-width="1.5"/>
+        <path d="M517.5,235.5 L522,238 L517.5,240.5" stroke="#3A4F6E" stroke-width="1.2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+        <text x="528" y="242" font-family="'JetBrains Mono',monospace" font-size="9" fill="#5C6B85">owns  1..N</text>
+        <!-- optional / triggers -->
+        <line x1="502" y1="257" x2="522" y2="257" stroke="#1E2A44" stroke-width="1.2" stroke-dasharray="4,2"/>
+        <path d="M517.5,254.5 L522,257 L517.5,259.5" stroke="#2A3957" stroke-width="1" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+        <text x="528" y="261" font-family="'JetBrains Mono',monospace" font-size="9" fill="#5C6B85">optional / triggers</text>
+        <!-- independent -->
+        <rect x="502" y="268" width="20" height="14" rx="3" fill="none" stroke="#2A3957" stroke-width="1" stroke-dasharray="3,2"/>
+        <text x="528" y="279" font-family="'JetBrains Mono',monospace" font-size="9" fill="#5C6B85">independent / global</text>
+        <!-- usable within -->
+        <line x1="502" y1="293" x2="522" y2="293" stroke="#1E2A44" stroke-width="1" stroke-dasharray="4,2"/>
+        <text x="528" y="297" font-family="'JetBrains Mono',monospace" font-size="9" fill="#5C6B85">usable within / 0..N</text>
+      </svg>
+    </div>
+
+    <div class="base-url">
       <span class="burl-label">Base URL</span>
       <span class="burl-val">http://localhost:26866/api/v1</span>
     </div>
@@ -262,7 +436,7 @@
     <!-- Conversations -->
     <div class="api-section" id="conversations">
       <h2>Conversations</h2>
-      <p class="section-desc">Manage conversation threads. Each conversation holds an ordered list of messages.</p>
+      <p class="section-desc">Manage conversation threads. Each conversation holds an ordered list of messages. <strong>Conversations and Tasks are the same concept</strong> — every task is a conversation with a goal and an assigned agent. The API uses both terms interchangeably.</p>
 
       <div class="endpoint">
         <div class="endpoint-header">
@@ -362,7 +536,7 @@
     <!-- Artifacts -->
     <div class="api-section" id="artifacts">
       <h2>Artifacts</h2>
-      <p class="section-desc">Artifacts are the outputs the agent creates — apps, reports, dashboards, documents. Each artifact belongs to a project.</p>
+      <p class="section-desc"><strong>Artifacts are mini apps</strong> — web apps, dashboards, reports, and documents generated by the agent and hosted within a project. Each artifact belongs to a project.</p>
 
       <div class="endpoint">
         <div class="endpoint-header">
@@ -447,7 +621,7 @@
     <!-- Files -->
     <div class="api-section" id="files">
       <h2>Files</h2>
-      <p class="section-desc">Upload and manage files that the agent can read, search, and reference during conversations.</p>
+      <p class="section-desc">Upload and manage files that the agent can read, search, and reference. Files can be attached to a project or to individual conversations.</p>
 
       <div class="endpoint">
         <div class="endpoint-header">
@@ -475,7 +649,7 @@
     <!-- Connectors -->
     <div class="api-section" id="connectors">
       <h2>Connectors</h2>
-      <p class="section-desc">Integrate external data sources. Connectors are defined by specs and instantiated as connections with encrypted credentials.</p>
+      <p class="section-desc">Integrate external data sources. Connectors exist independently of any project but can be referenced inside any project. They are defined by specs and instantiated as connections with encrypted credentials.</p>
 
       <div class="endpoint">
         <div class="endpoint-header">
@@ -508,6 +682,280 @@
     </div>
 
     <!-- Search -->
+    <div class="api-section" id="memories">
+      <h2>Memories</h2>
+      <p class="section-desc">Persistent facts and context the agent retains across conversations. Memories can be <strong>global</strong> (shared across all projects) or <strong>project-scoped</strong> — omit <code>project_id</code> to create a global memory.</p>
+
+      <div class="endpoint">
+        <div class="endpoint-header">
+          <span class="method get">GET</span>
+          <span class="endpoint-path">/memories</span>
+          <span class="endpoint-desc">List memories — optionally filter by project</span>
+        </div>
+        <div class="endpoint-body">
+          <div class="code-block">
+            <div class="code-header"><span class="code-lang">curl</span></div>
+            <pre><span class="hl">curl</span> <span class="st">"http://localhost:26866/api/v1/memories"</span>              <span class="cm"># global</span>
+<span class="hl">curl</span> <span class="st">"http://localhost:26866/api/v1/memories?project_id=..."</span>  <span class="cm"># project-scoped</span></pre>
+          </div>
+        </div>
+      </div>
+
+      <div class="endpoint">
+        <div class="endpoint-header">
+          <span class="method post">POST</span>
+          <span class="endpoint-path">/memories</span>
+          <span class="endpoint-desc">Create a memory</span>
+        </div>
+        <div class="endpoint-body">
+          <div class="code-block">
+            <div class="code-header"><span class="code-lang">curl</span></div>
+            <pre><span class="hl">curl</span> -X POST <span class="st">"http://localhost:26866/api/v1/memories"</span> \
+  -H <span class="st">"Content-Type: application/json"</span> \
+  -d <span class="st">'{"content":"Prefers executive summaries under 200 words."}'</span>              <span class="cm"># global</span>
+<span class="hl">curl</span> -X POST <span class="st">"http://localhost:26866/api/v1/memories"</span> \
+  -H <span class="st">"Content-Type: application/json"</span> \
+  -d <span class="st">'{"project_id":"...","content":"Always use Q3 targets as the baseline."}'</span>  <span class="cm"># project-scoped</span></pre>
+          </div>
+        </div>
+      </div>
+
+      <div class="endpoint">
+        <div class="endpoint-header">
+          <span class="method patch">PATCH</span>
+          <span class="endpoint-path">/memories/{memory_id}</span>
+          <span class="endpoint-desc">Update a memory</span>
+        </div>
+      </div>
+
+      <div class="endpoint">
+        <div class="endpoint-header">
+          <span class="method delete">DELETE</span>
+          <span class="endpoint-path">/memories/{memory_id}</span>
+          <span class="endpoint-desc">Delete a memory</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="api-section" id="skills">
+      <h2>Skills</h2>
+      <p class="section-desc">Reusable capabilities available globally across all projects — custom instructions, tools, or prompt templates the agent can invoke. Skills extend what the agent knows how to do without re-explaining it each time. Like Connectors, they exist independently of any single project.</p>
+
+      <div class="endpoint">
+        <div class="endpoint-header">
+          <span class="method get">GET</span>
+          <span class="endpoint-path">/skills</span>
+          <span class="endpoint-desc">List all skills</span>
+        </div>
+        <div class="endpoint-body">
+          <div class="code-block">
+            <div class="code-header"><span class="code-lang">curl</span></div>
+            <pre><span class="hl">curl</span> <span class="st">"http://localhost:26866/api/v1/skills"</span></pre>
+          </div>
+        </div>
+      </div>
+
+      <div class="endpoint">
+        <div class="endpoint-header">
+          <span class="method post">POST</span>
+          <span class="endpoint-path">/skills</span>
+          <span class="endpoint-desc">Register a skill</span>
+        </div>
+        <div class="endpoint-body">
+          <div class="code-block">
+            <div class="code-header"><span class="code-lang">curl</span></div>
+            <pre><span class="hl">curl</span> -X POST <span class="st">"http://localhost:26866/api/v1/skills"</span> \
+  -H <span class="st">"Content-Type: application/json"</span> \
+  -d <span class="st">'{"name":"weekly-report","description":"Generates a weekly performance report from connected data sources."}'</span></pre>
+          </div>
+        </div>
+      </div>
+
+      <div class="endpoint">
+        <div class="endpoint-header">
+          <span class="method patch">PATCH</span>
+          <span class="endpoint-path">/skills/{skill_id}</span>
+          <span class="endpoint-desc">Update a skill</span>
+        </div>
+      </div>
+
+      <div class="endpoint">
+        <div class="endpoint-header">
+          <span class="method delete">DELETE</span>
+          <span class="endpoint-path">/skills/{skill_id}</span>
+          <span class="endpoint-desc">Delete a skill</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="api-section" id="scratchpads">
+      <h2>Scratchpads</h2>
+      <p class="section-desc">Notebook-style workspaces scoped to a conversation. A scratchpad is made up of ordered <strong>cells</strong> — the agent writes to cells as it reasons, drafts, and executes code. Each cell has a type (<code>markdown</code>, <code>code</code>, or <code>output</code>) and tracks its own execution state. Scratchpads persist for the lifetime of the conversation and can be promoted to an Artifact.</p>
+
+      <h2 style="font-size:14px;font-weight:600;color:var(--ink-3);border:none;margin:0 0 16px;padding:0;letter-spacing:0.04em;">Scratchpad object</h2>
+      <div class="code-block" style="margin-bottom:32px">
+        <div class="code-header"><span class="code-lang">json</span></div>
+        <pre>{
+  <span class="hl">"id"</span>:              <span class="st">"sp_abc123"</span>,
+  <span class="hl">"conversation_id"</span>: <span class="st">"conv_xyz"</span>,
+  <span class="hl">"title"</span>:           <span class="st">"Sales analysis draft"</span>,
+  <span class="hl">"cells"</span>:           <span class="cm">[ /* ordered array of Cell objects */</span> ],
+  <span class="hl">"saved"</span>:           <span class="st">false</span>,     <span class="cm">// true once promoted / pinned</span>
+  <span class="hl">"created_at"</span>:      <span class="st">"2026-06-11T10:00:00Z"</span>,
+  <span class="hl">"updated_at"</span>:      <span class="st">"2026-06-11T10:04:12Z"</span>
+}</pre>
+      </div>
+
+      <h2 style="font-size:14px;font-weight:600;color:var(--ink-3);border:none;margin:0 0 16px;padding:0;letter-spacing:0.04em;">Cell object</h2>
+      <div class="code-block" style="margin-bottom:8px">
+        <div class="code-header"><span class="code-lang">json</span></div>
+        <pre>{
+  <span class="hl">"id"</span>:        <span class="st">"cell_001"</span>,
+  <span class="hl">"type"</span>:      <span class="st">"code"</span>,          <span class="cm">// "markdown" | "code" | "output"</span>
+  <span class="hl">"content"</span>:   <span class="st">"df.describe()"</span>,
+  <span class="hl">"language"</span>:  <span class="st">"python"</span>,        <span class="cm">// present when type = "code"</span>
+  <span class="hl">"status"</span>:    <span class="st">"success"</span>,       <span class="cm">// "pending" | "running" | "success" | "error"</span>
+  <span class="hl">"outputs"</span>:   [                 <span class="cm">// present when type = "output"</span>
+    {
+      <span class="hl">"mime"</span>:    <span class="st">"text/plain"</span>,
+      <span class="hl">"data"</span>:    <span class="st">"count    12.0\nmean     4.2\n..."</span>
+    },
+    {
+      <span class="hl">"mime"</span>:    <span class="st">"image/png"</span>,
+      <span class="hl">"data"</span>:    <span class="st">"data:image/png;base64,..."</span>
+    }
+  ],
+  <span class="hl">"error"</span>:     <span class="st">null</span>,            <span class="cm">// error message when status = "error"</span>
+  <span class="hl">"index"</span>:     <span class="st">0</span>                 <span class="cm">// display order within the scratchpad</span>
+}</pre>
+      </div>
+      <p class="section-desc" style="margin-bottom:32px;font-size:12.5px">
+        <strong>type</strong> — <code>markdown</code> cells are prose written by the agent; <code>code</code> cells are executable snippets; <code>output</code> cells are the results attached to the preceding code cell (stdout, images, tables).<br>
+        <strong>status</strong> — only relevant on <code>code</code> cells. <code>pending</code> means queued, <code>running</code> means currently executing, <code>success</code>/<code>error</code> are terminal states.<br>
+        <strong>outputs</strong> — multi-modal: a single code cell can produce several output objects with different MIME types (plain text, HTML, PNG charts, JSON).
+      </p>
+
+      <div class="endpoint">
+        <div class="endpoint-header">
+          <span class="method get">GET</span>
+          <span class="endpoint-path">/scratchpads</span>
+          <span class="endpoint-desc">List scratchpads for a conversation</span>
+        </div>
+        <div class="endpoint-body">
+          <div class="code-block">
+            <div class="code-header"><span class="code-lang">curl</span></div>
+            <pre><span class="hl">curl</span> <span class="st">"http://localhost:26866/api/v1/scratchpads?conversation_id=..."</span></pre>
+          </div>
+        </div>
+      </div>
+
+      <div class="endpoint">
+        <div class="endpoint-header">
+          <span class="method post">POST</span>
+          <span class="endpoint-path">/scratchpads</span>
+          <span class="endpoint-desc">Create a scratchpad</span>
+        </div>
+        <div class="endpoint-body">
+          <div class="code-block">
+            <div class="code-header"><span class="code-lang">curl</span></div>
+            <pre><span class="hl">curl</span> -X POST <span class="st">"http://localhost:26866/api/v1/scratchpads"</span> \
+  -H <span class="st">"Content-Type: application/json"</span> \
+  -d <span class="st">'{"conversation_id":"...","title":"Sales analysis draft","cells":[]}'</span></pre>
+          </div>
+        </div>
+      </div>
+
+      <div class="endpoint">
+        <div class="endpoint-header">
+          <span class="method get">GET</span>
+          <span class="endpoint-path">/scratchpads/{scratchpad_id}</span>
+          <span class="endpoint-desc">Get a scratchpad with all cells</span>
+        </div>
+      </div>
+
+      <div class="endpoint">
+        <div class="endpoint-header">
+          <span class="method patch">PATCH</span>
+          <span class="endpoint-path">/scratchpads/{scratchpad_id}</span>
+          <span class="endpoint-desc">Update title or save state</span>
+        </div>
+        <div class="endpoint-body">
+          <div class="code-block">
+            <div class="code-header"><span class="code-lang">curl</span></div>
+            <pre><span class="hl">curl</span> -X PATCH <span class="st">"http://localhost:26866/api/v1/scratchpads/{scratchpad_id}"</span> \
+  -H <span class="st">"Content-Type: application/json"</span> \
+  -d <span class="st">'{"title":"Final analysis","saved":true}'</span></pre>
+          </div>
+        </div>
+      </div>
+
+      <div class="endpoint">
+        <div class="endpoint-header">
+          <span class="method delete">DELETE</span>
+          <span class="endpoint-path">/scratchpads/{scratchpad_id}</span>
+          <span class="endpoint-desc">Delete a scratchpad and all its cells</span>
+        </div>
+      </div>
+
+      <h2 style="font-size:16px;font-weight:600;color:var(--ink);border-bottom:1px solid var(--line);margin:32px 0 16px;padding-bottom:10px;">Cells</h2>
+      <p class="section-desc">Cells are managed individually so the agent can append, edit, or re-run a single cell without replacing the whole scratchpad.</p>
+
+      <div class="endpoint">
+        <div class="endpoint-header">
+          <span class="method post">POST</span>
+          <span class="endpoint-path">/scratchpads/{scratchpad_id}/cells</span>
+          <span class="endpoint-desc">Append a cell</span>
+        </div>
+        <div class="endpoint-body">
+          <div class="code-block">
+            <div class="code-header"><span class="code-lang">curl</span></div>
+            <pre><span class="hl">curl</span> -X POST <span class="st">"http://localhost:26866/api/v1/scratchpads/{scratchpad_id}/cells"</span> \
+  -H <span class="st">"Content-Type: application/json"</span> \
+  -d <span class="st">'{"type":"code","language":"python","content":"df.head()"}'</span></pre>
+          </div>
+        </div>
+      </div>
+
+      <div class="endpoint">
+        <div class="endpoint-header">
+          <span class="method patch">PATCH</span>
+          <span class="endpoint-path">/scratchpads/{scratchpad_id}/cells/{cell_id}</span>
+          <span class="endpoint-desc">Edit a cell's content or index</span>
+        </div>
+        <div class="endpoint-body">
+          <div class="code-block">
+            <div class="code-header"><span class="code-lang">curl</span></div>
+            <pre><span class="hl">curl</span> -X PATCH <span class="st">"http://localhost:26866/api/v1/scratchpads/{scratchpad_id}/cells/{cell_id}"</span> \
+  -H <span class="st">"Content-Type: application/json"</span> \
+  -d <span class="st">'{"content":"df.tail(10)","index":2}'</span></pre>
+          </div>
+        </div>
+      </div>
+
+      <div class="endpoint">
+        <div class="endpoint-header">
+          <span class="method post">POST</span>
+          <span class="endpoint-path">/scratchpads/{scratchpad_id}/cells/{cell_id}/run</span>
+          <span class="endpoint-desc">Execute a code cell</span>
+        </div>
+        <div class="endpoint-body">
+          <p>Runs the cell and streams output back as server-sent events. Each event carries a partial output object. Terminal event has <code>status: "success"</code> or <code>status: "error"</code>.</p>
+          <div class="code-block">
+            <div class="code-header"><span class="code-lang">curl</span></div>
+            <pre><span class="hl">curl</span> -X POST <span class="st">"http://localhost:26866/api/v1/scratchpads/{scratchpad_id}/cells/{cell_id}/run"</span></pre>
+          </div>
+        </div>
+      </div>
+
+      <div class="endpoint">
+        <div class="endpoint-header">
+          <span class="method delete">DELETE</span>
+          <span class="endpoint-path">/scratchpads/{scratchpad_id}/cells/{cell_id}</span>
+          <span class="endpoint-desc">Delete a cell</span>
+        </div>
+      </div>
+    </div>
+
     <div class="api-section" id="search">
       <h2>Search</h2>
       <p class="section-desc">Full-text and semantic search across conversations, files, and memory.</p>
@@ -544,6 +992,26 @@
       document.querySelector('nav').removeAttribute('data-open');
     });
   });
+
+  // Scroll spy
+  var sidebarLinks = Array.from(document.querySelectorAll('.sidebar a[href^="#"]'));
+  var sections = sidebarLinks.map(function(a) {
+    return document.querySelector(a.getAttribute('href'));
+  }).filter(Boolean);
+
+  function onScroll() {
+    var scrollY = window.scrollY + 100;
+    var active = sections[0];
+    sections.forEach(function(s) {
+      if (s.getBoundingClientRect().top + window.scrollY <= scrollY) active = s;
+    });
+    sidebarLinks.forEach(function(a) {
+      a.classList.toggle('active', a.getAttribute('href') === '#' + active.id);
+    });
+  }
+
+  window.addEventListener('scroll', onScroll, { passive: true });
+  onScroll();
 </script>
 </body>
 </html>
