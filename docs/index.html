@@ -120,14 +120,19 @@
   @media (min-width: 900px) { .cards { grid-template-columns: repeat(3, 1fr); } }
 
   .card {
+    position: relative;
     background: var(--surface);
     border: 1px solid var(--line);
     border-radius: var(--r-xl);
     padding: 28px 26px 24px;
     display: flex; flex-direction: column; gap: 10px;
     transition: border-color 160ms, transform 160ms, box-shadow 160ms;
-    cursor: default;
+    cursor: pointer;
   }
+  .card .card-cover {
+    position: absolute; inset: 0; border-radius: var(--r-xl);
+  }
+  .card a.card-link { position: relative; z-index: 1; }
   .card:hover {
     border-color: rgba(34,211,238,0.30);
     transform: translateY(-2px);
@@ -179,24 +184,48 @@
   @media (min-width: 640px) { .arch-grid { grid-template-columns: repeat(3, 1fr); } }
 
   .arch-pill {
+    position: relative;
     background: var(--surface-2);
     border: 1px solid var(--line);
     border-radius: var(--r-lg);
     padding: 18px 20px;
     display: flex; flex-direction: column; gap: 6px;
+    transition: border-color 150ms, transform 150ms;
+  }
+  .arch-pill:hover {
+    border-color: rgba(34,211,238,0.30);
+    transform: translateY(-2px);
+  }
+  .arch-pill .pill-cover {
+    position: absolute; inset: 0;
+    border-radius: var(--r-lg);
   }
   .arch-pill .pill-name {
     font-family: var(--font-mono);
     font-size: 11.5px; font-weight: 600;
     color: var(--accent);
     letter-spacing: 0.06em;
+    display: flex; align-items: center; gap: 8px;
   }
   .arch-pill .pill-desc {
-    font-size: 13px; color: var(--ink-3); line-height: 1.5;
+    font-size: 13px; color: var(--ink-3); line-height: 1.5; flex: 1;
   }
   .arch-pill .pill-repo {
     font-family: var(--font-mono);
-    font-size: 10.5px; color: var(--ink-4); margin-top: 2px;
+    font-size: 10.5px; margin-top: 6px;
+    position: relative; z-index: 1;
+  }
+  .arch-pill .pill-repo a {
+    color: var(--ink-4);
+    transition: color 120ms;
+  }
+  .arch-pill .pill-repo a:hover { color: var(--accent); opacity: 1; }
+  .pill-optional {
+    font-family: var(--font-mono); font-size: 9px; font-weight: 600;
+    letter-spacing: 0.12em; text-transform: uppercase;
+    background: rgba(139,92,246,0.12); color: #C4B5FD;
+    border: 1px solid rgba(196,181,253,0.20);
+    border-radius: 100px; padding: 2px 8px;
   }
 
   /* ── Footer ── */
@@ -221,8 +250,8 @@
     <div class="nav-links">
       <a href="index.html" class="active">Docs</a>
       <a href="setup.html">Setup</a>
-      <a href="api.html">API</a>
       <a href="use-cases.html">Use Cases</a>
+      <a href="api.html">API</a>
       <a href="https://github.com/mindsdb/minds-platform">GitHub ↗</a>
     </div>
   </div>
@@ -238,6 +267,7 @@
 
   <div class="cards">
     <div class="card">
+      <a href="setup.html" class="card-cover"></a>
       <div class="card-icon">⚡</div>
       <div class="card-tag">Guide</div>
       <h3>Get Started</h3>
@@ -245,18 +275,20 @@
       <a href="setup.html" class="card-link">Setup guide →</a>
     </div>
     <div class="card">
-      <div class="card-icon">⬡</div>
-      <div class="card-tag">Reference</div>
-      <h3>API</h3>
-      <p>REST endpoints for conversations, projects, artifacts, schedules, connectors, and more.</p>
-      <a href="api.html" class="card-link">API reference →</a>
-    </div>
-    <div class="card">
+      <a href="use-cases.html" class="card-cover"></a>
       <div class="card-icon">◈</div>
       <div class="card-tag">Examples</div>
       <h3>Use Cases</h3>
       <p>See what creators, operators, and strategists are building with the platform.</p>
       <a href="use-cases.html" class="card-link">Explore examples →</a>
+    </div>
+    <div class="card">
+      <a href="api.html" class="card-cover"></a>
+      <div class="card-icon">⬡</div>
+      <div class="card-tag">Reference</div>
+      <h3>API</h3>
+      <p>REST endpoints for conversations, projects, artifacts, schedules, connectors, and more.</p>
+      <a href="api.html" class="card-link">API reference →</a>
     </div>
   </div>
 </div>
@@ -265,19 +297,28 @@
   <div class="section-label">Platform modules</div>
   <div class="arch-grid">
     <div class="arch-pill">
+      <a class="pill-cover" href="https://github.com/mindsdb/cowork" target="_blank"></a>
       <div class="pill-name">frontend</div>
       <div class="pill-desc">Electron + Vite desktop app. Also ships as a web SPA via <code>make dev-web</code>.</div>
-      <div class="pill-repo">github.com/mindsdb/cowork</div>
+      <div class="pill-repo"><a href="https://github.com/mindsdb/cowork" target="_blank">github.com/mindsdb/cowork ↗</a></div>
     </div>
     <div class="arch-pill">
+      <a class="pill-cover" href="api.html"></a>
       <div class="pill-name">backend / core_api</div>
       <div class="pill-desc">FastAPI server. Conversations, projects, artifacts, schedules, connectors.</div>
-      <div class="pill-repo">github.com/mindsdb/cowork-server</div>
+      <div class="pill-repo"><a href="https://github.com/mindsdb/cowork-server" target="_blank">github.com/mindsdb/cowork-server ↗</a></div>
     </div>
     <div class="arch-pill">
+      <a class="pill-cover" href="https://deepwiki.com/mindsdb/anton" target="_blank"></a>
       <div class="pill-name">backend / core_agent</div>
       <div class="pill-desc">Anton — the autonomous coding and reasoning agent powering task execution.</div>
-      <div class="pill-repo">github.com/mindsdb/anton</div>
+      <div class="pill-repo"><a href="https://github.com/mindsdb/anton" target="_blank">github.com/mindsdb/anton ↗</a></div>
+    </div>
+<div class="arch-pill">
+      <a class="pill-cover" href="https://mindsdb.github.io/engine/" target="_blank"></a>
+      <div class="pill-name">query engine <span class="pill-optional">optional</span></div>
+      <div class="pill-desc">Embeddable query engine for conversational business intelligence across data sources.</div>
+      <div class="pill-repo"><a href="https://mindsdb.github.io/engine/" target="_blank">mindsdb.github.io/engine ↗</a></div>
     </div>
   </div>
 </div>
