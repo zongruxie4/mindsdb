@@ -178,6 +178,19 @@
   .erd-note { font-size: 12px; color: var(--ink-4); font-family: var(--font-mono); line-height: 1.55; padding: 0 2px; }
   .erd-note strong { color: var(--ink-3); font-weight: 600; }
 
+  /* ── Params table ── */
+  .schema-label { font-family: var(--font-mono); font-size: 9.5px; font-weight: 600; letter-spacing: 0.14em; text-transform: uppercase; color: var(--ink-4); margin: 16px 0 8px; }
+  .params-table { width: 100%; border-collapse: collapse; margin-bottom: 14px; }
+  .params-table tr:not(:last-child) td { border-bottom: 1px solid var(--line); }
+  .params-table td { padding: 7px 0; vertical-align: top; }
+  .p-name { font-family: var(--font-mono); color: var(--accent); font-size: 12px; padding-right: 16px; white-space: nowrap; width: 1%; }
+  .p-type { font-family: var(--font-mono); color: var(--ink-4); font-size: 11px; padding-right: 16px; white-space: nowrap; width: 1%; }
+  .p-req { font-family: var(--font-mono); font-size: 10px; padding-right: 16px; white-space: nowrap; width: 1%; }
+  .p-req.req { color: var(--method-post); }
+  .p-req.opt { color: var(--ink-4); }
+  .p-desc { font-size: 12.5px; color: var(--ink-3); }
+  .p-desc code { font-size: 0.9em; }
+
   footer { border-top: 1px solid var(--line); padding: 24px; text-align: center; font-family: var(--font-mono); font-size: 11px; color: var(--ink-4); letter-spacing: 0.06em; }
 </style>
 </head>
@@ -399,6 +412,21 @@
       <h2>Responses</h2>
       <p class="section-desc">Stream AI responses from the agent. Compatible with the OpenAI Responses API shape.</p>
 
+      <p class="schema-label">Response object</p>
+      <div class="code-block" style="margin-bottom:24px">
+        <div class="code-header"><span class="code-lang">json</span></div>
+        <pre>{
+  <span class="hl">"id"</span>:              <span class="st">"resp_abc123"</span>,
+  <span class="hl">"conversation_id"</span>: <span class="st">"conv_xyz"</span>,
+  <span class="hl">"input"</span>:           <span class="st">"Summarise last week's sales data"</span>,
+  <span class="hl">"output"</span>:          [{ <span class="hl">"type"</span>: <span class="st">"text"</span>, <span class="hl">"text"</span>: <span class="st">"Here is the summary..."</span> }],
+  <span class="hl">"status"</span>:          <span class="st">"completed"</span>,  <span class="cm">// "in_progress" | "completed" | "failed"</span>
+  <span class="hl">"model"</span>:           <span class="st">"claude-opus-4-8"</span>,
+  <span class="hl">"usage"</span>:           { <span class="hl">"input_tokens"</span>: <span class="st">120</span>, <span class="hl">"output_tokens"</span>: <span class="st">340</span> },
+  <span class="hl">"created_at"</span>:      <span class="st">"2026-06-11T10:00:00Z"</span>
+}</pre>
+      </div>
+
       <div class="endpoint">
         <div class="endpoint-header">
           <span class="method post">POST</span>
@@ -406,12 +434,19 @@
           <span class="endpoint-desc">Create a streaming response</span>
         </div>
         <div class="endpoint-body">
-          <p>Sends a message and streams back the agent's response as server-sent events.</p>
+          <p class="schema-label">Body</p>
+          <table class="params-table">
+            <tr><td class="p-name">conversation_id</td><td class="p-type">string</td><td class="p-req req">required</td><td class="p-desc">ID of the conversation to append the response to.</td></tr>
+            <tr><td class="p-name">input</td><td class="p-type">string</td><td class="p-req req">required</td><td class="p-desc">User message text.</td></tr>
+            <tr><td class="p-name">stream</td><td class="p-type">boolean</td><td class="p-req opt">optional</td><td class="p-desc">Default <code>true</code>. Return server-sent events. Set to <code>false</code> for a single JSON response.</td></tr>
+            <tr><td class="p-name">model</td><td class="p-type">string</td><td class="p-req opt">optional</td><td class="p-desc">Override the agent model for this turn. Defaults to the project setting.</td></tr>
+            <tr><td class="p-name">skill_ids</td><td class="p-type">string[]</td><td class="p-req opt">optional</td><td class="p-desc">Skill IDs to activate for this turn.</td></tr>
+          </table>
           <div class="code-block">
             <div class="code-header"><span class="code-lang">curl</span></div>
             <pre><span class="hl">curl</span> -X POST http://localhost:26866/api/v1/responses \
   -H <span class="st">"Content-Type: application/json"</span> \
-  -d <span class="st">'{"conversation_id": "...", "input": "Summarise last week'\''s sales data"}'</span></pre>
+  -d <span class="st">'{"conversation_id":"conv_xyz","input":"Summarise last week'\''s sales data","stream":true}'</span></pre>
           </div>
         </div>
       </div>
@@ -422,13 +457,25 @@
           <span class="endpoint-path">/responses/in-flight-list</span>
           <span class="endpoint-desc">List active streams</span>
         </div>
+        <div class="endpoint-body">
+          <p class="schema-label">Query parameters</p>
+          <table class="params-table">
+            <tr><td class="p-name">conversation_id</td><td class="p-type">string</td><td class="p-req opt">optional</td><td class="p-desc">Filter to a specific conversation.</td></tr>
+          </table>
+        </div>
       </div>
 
       <div class="endpoint">
         <div class="endpoint-header">
           <span class="method get">GET</span>
           <span class="endpoint-path">/responses/in-flight</span>
-          <span class="endpoint-desc">Check a specific stream</span>
+          <span class="endpoint-desc">Check a specific in-flight stream</span>
+        </div>
+        <div class="endpoint-body">
+          <p class="schema-label">Query parameters</p>
+          <table class="params-table">
+            <tr><td class="p-name">conversation_id</td><td class="p-type">string</td><td class="p-req req">required</td><td class="p-desc">Conversation whose active stream to retrieve.</td></tr>
+          </table>
         </div>
       </div>
     </div>
@@ -438,13 +485,37 @@
       <h2>Conversations</h2>
       <p class="section-desc">Manage conversation threads. Each conversation holds an ordered list of messages. <strong>Conversations and Tasks are the same concept</strong> — every task is a conversation with a goal and an assigned agent. The API uses both terms interchangeably.</p>
 
+      <p class="schema-label">Conversation object</p>
+      <div class="code-block" style="margin-bottom:24px">
+        <div class="code-header"><span class="code-lang">json</span></div>
+        <pre>{
+  <span class="hl">"id"</span>:           <span class="st">"conv_abc123"</span>,
+  <span class="hl">"project_id"</span>:   <span class="st">"proj_xyz"</span>,           <span class="cm">// null if not project-scoped</span>
+  <span class="hl">"title"</span>:        <span class="st">"Q2 analysis"</span>,
+  <span class="hl">"goal"</span>:         <span class="st">"Analyse Q2 revenue by region"</span>,  <span class="cm">// task prompt, optional</span>
+  <span class="hl">"status"</span>:       <span class="st">"active"</span>,             <span class="cm">// "active" | "archived"</span>
+  <span class="hl">"created_at"</span>:   <span class="st">"2026-06-11T10:00:00Z"</span>,
+  <span class="hl">"updated_at"</span>:   <span class="st">"2026-06-11T10:04:12Z"</span>
+}</pre>
+      </div>
+
       <div class="endpoint">
         <div class="endpoint-header">
           <span class="method get">GET</span>
           <span class="endpoint-path">/conversations</span>
           <span class="endpoint-desc">List conversations</span>
         </div>
+        <div class="endpoint-body">
+          <p class="schema-label">Query parameters</p>
+          <table class="params-table">
+            <tr><td class="p-name">project_id</td><td class="p-type">string</td><td class="p-req opt">optional</td><td class="p-desc">Filter to a specific project.</td></tr>
+            <tr><td class="p-name">status</td><td class="p-type">string</td><td class="p-req opt">optional</td><td class="p-desc"><code>active</code> or <code>archived</code>. Returns all if omitted.</td></tr>
+            <tr><td class="p-name">limit</td><td class="p-type">integer</td><td class="p-req opt">optional</td><td class="p-desc">Max results to return. Default <code>50</code>, max <code>200</code>.</td></tr>
+            <tr><td class="p-name">offset</td><td class="p-type">integer</td><td class="p-req opt">optional</td><td class="p-desc">Pagination offset. Default <code>0</code>.</td></tr>
+          </table>
+        </div>
       </div>
+
       <div class="endpoint">
         <div class="endpoint-header">
           <span class="method post">POST</span>
@@ -452,40 +523,72 @@
           <span class="endpoint-desc">Create a conversation</span>
         </div>
         <div class="endpoint-body">
+          <p class="schema-label">Body</p>
+          <table class="params-table">
+            <tr><td class="p-name">project_id</td><td class="p-type">string</td><td class="p-req opt">optional</td><td class="p-desc">Attach to a project.</td></tr>
+            <tr><td class="p-name">title</td><td class="p-type">string</td><td class="p-req opt">optional</td><td class="p-desc">Human-readable name. Auto-generated from the first message if omitted.</td></tr>
+            <tr><td class="p-name">goal</td><td class="p-type">string</td><td class="p-req opt">optional</td><td class="p-desc">Task prompt or goal that frames the conversation for the agent.</td></tr>
+          </table>
           <div class="code-block">
             <div class="code-header"><span class="code-lang">curl</span></div>
             <pre><span class="hl">curl</span> -X POST http://localhost:26866/api/v1/conversations \
   -H <span class="st">"Content-Type: application/json"</span> \
-  -d <span class="st">'{"project_id": "...", "title": "Q2 analysis"}'</span></pre>
+  -d <span class="st">'{"project_id":"proj_xyz","title":"Q2 analysis","goal":"Analyse Q2 revenue by region"}'</span></pre>
           </div>
         </div>
       </div>
+
       <div class="endpoint">
         <div class="endpoint-header">
           <span class="method get">GET</span>
           <span class="endpoint-path">/conversations/{id}</span>
           <span class="endpoint-desc">Get a conversation</span>
         </div>
+        <div class="endpoint-body">
+          <p class="schema-label">Path parameters</p>
+          <table class="params-table">
+            <tr><td class="p-name">id</td><td class="p-type">string</td><td class="p-req req">required</td><td class="p-desc">Conversation ID.</td></tr>
+          </table>
+        </div>
       </div>
+
       <div class="endpoint">
         <div class="endpoint-header">
           <span class="method patch">PATCH</span>
           <span class="endpoint-path">/conversations/{id}</span>
-          <span class="endpoint-desc">Update title or metadata</span>
+          <span class="endpoint-desc">Update title, goal, or status</span>
+        </div>
+        <div class="endpoint-body">
+          <p class="schema-label">Body</p>
+          <table class="params-table">
+            <tr><td class="p-name">title</td><td class="p-type">string</td><td class="p-req opt">optional</td><td class="p-desc">New title.</td></tr>
+            <tr><td class="p-name">goal</td><td class="p-type">string</td><td class="p-req opt">optional</td><td class="p-desc">Updated task goal.</td></tr>
+            <tr><td class="p-name">status</td><td class="p-type">string</td><td class="p-req opt">optional</td><td class="p-desc"><code>active</code> or <code>archived</code>.</td></tr>
+          </table>
         </div>
       </div>
+
       <div class="endpoint">
         <div class="endpoint-header">
           <span class="method get">GET</span>
           <span class="endpoint-path">/conversations/{id}/items</span>
           <span class="endpoint-desc">Get messages in a conversation</span>
         </div>
+        <div class="endpoint-body">
+          <p>Returns an ordered array of message items. Each item has <code>role</code> (<code>user</code> or <code>assistant</code>), <code>content</code>, and <code>created_at</code>.</p>
+          <p class="schema-label">Query parameters</p>
+          <table class="params-table">
+            <tr><td class="p-name">limit</td><td class="p-type">integer</td><td class="p-req opt">optional</td><td class="p-desc">Default <code>100</code>.</td></tr>
+            <tr><td class="p-name">before</td><td class="p-type">string</td><td class="p-req opt">optional</td><td class="p-desc">Return items before this item ID (cursor pagination).</td></tr>
+          </table>
+        </div>
       </div>
+
       <div class="endpoint">
         <div class="endpoint-header">
           <span class="method delete">DELETE</span>
           <span class="endpoint-path">/conversations/{id}</span>
-          <span class="endpoint-desc">Delete a conversation</span>
+          <span class="endpoint-desc">Delete a conversation and all its messages</span>
         </div>
       </div>
     </div>
@@ -495,13 +598,35 @@
       <h2>Projects</h2>
       <p class="section-desc">Projects are workspaces that group conversations, files, and artifacts.</p>
 
+      <p class="schema-label">Project object</p>
+      <div class="code-block" style="margin-bottom:24px">
+        <div class="code-header"><span class="code-lang">json</span></div>
+        <pre>{
+  <span class="hl">"id"</span>:             <span class="st">"proj_abc123"</span>,
+  <span class="hl">"name"</span>:           <span class="st">"Sales Automation"</span>,
+  <span class="hl">"description"</span>:    <span class="st">"Weekly reporting flows"</span>,
+  <span class="hl">"connector_ids"</span>:  [<span class="st">"conn_001"</span>, <span class="st">"conn_002"</span>],
+  <span class="hl">"skill_ids"</span>:      [<span class="st">"skill_abc"</span>],
+  <span class="hl">"created_at"</span>:     <span class="st">"2026-06-11T10:00:00Z"</span>,
+  <span class="hl">"updated_at"</span>:     <span class="st">"2026-06-11T10:00:00Z"</span>
+}</pre>
+      </div>
+
       <div class="endpoint">
         <div class="endpoint-header">
           <span class="method get">GET</span>
           <span class="endpoint-path">/projects</span>
           <span class="endpoint-desc">List all projects</span>
         </div>
+        <div class="endpoint-body">
+          <p class="schema-label">Query parameters</p>
+          <table class="params-table">
+            <tr><td class="p-name">limit</td><td class="p-type">integer</td><td class="p-req opt">optional</td><td class="p-desc">Default <code>50</code>.</td></tr>
+            <tr><td class="p-name">offset</td><td class="p-type">integer</td><td class="p-req opt">optional</td><td class="p-desc">Default <code>0</code>.</td></tr>
+          </table>
+        </div>
       </div>
+
       <div class="endpoint">
         <div class="endpoint-header">
           <span class="method post">POST</span>
@@ -509,26 +634,44 @@
           <span class="endpoint-desc">Create a project</span>
         </div>
         <div class="endpoint-body">
+          <p class="schema-label">Body</p>
+          <table class="params-table">
+            <tr><td class="p-name">name</td><td class="p-type">string</td><td class="p-req req">required</td><td class="p-desc">Display name for the project.</td></tr>
+            <tr><td class="p-name">description</td><td class="p-type">string</td><td class="p-req opt">optional</td><td class="p-desc">Short description shown in the UI.</td></tr>
+            <tr><td class="p-name">connector_ids</td><td class="p-type">string[]</td><td class="p-req opt">optional</td><td class="p-desc">Data source connections available within this project.</td></tr>
+            <tr><td class="p-name">skill_ids</td><td class="p-type">string[]</td><td class="p-req opt">optional</td><td class="p-desc">Global skills to activate for all conversations in this project.</td></tr>
+          </table>
           <div class="code-block">
             <div class="code-header"><span class="code-lang">curl</span></div>
             <pre><span class="hl">curl</span> -X POST http://localhost:26866/api/v1/projects \
   -H <span class="st">"Content-Type: application/json"</span> \
-  -d <span class="st">'{"name": "Sales Automation", "description": "Weekly reporting flows"}'</span></pre>
+  -d <span class="st">'{"name":"Sales Automation","description":"Weekly reporting flows","connector_ids":["conn_001"]}'</span></pre>
           </div>
         </div>
       </div>
+
       <div class="endpoint">
         <div class="endpoint-header">
           <span class="method patch">PATCH</span>
           <span class="endpoint-path">/projects/{id}</span>
           <span class="endpoint-desc">Update a project</span>
         </div>
+        <div class="endpoint-body">
+          <p class="schema-label">Body</p>
+          <table class="params-table">
+            <tr><td class="p-name">name</td><td class="p-type">string</td><td class="p-req opt">optional</td><td class="p-desc"></td></tr>
+            <tr><td class="p-name">description</td><td class="p-type">string</td><td class="p-req opt">optional</td><td class="p-desc"></td></tr>
+            <tr><td class="p-name">connector_ids</td><td class="p-type">string[]</td><td class="p-req opt">optional</td><td class="p-desc">Replaces the current list.</td></tr>
+            <tr><td class="p-name">skill_ids</td><td class="p-type">string[]</td><td class="p-req opt">optional</td><td class="p-desc">Replaces the current list.</td></tr>
+          </table>
+        </div>
       </div>
+
       <div class="endpoint">
         <div class="endpoint-header">
           <span class="method delete">DELETE</span>
           <span class="endpoint-path">/projects/{id}</span>
-          <span class="endpoint-desc">Delete a project</span>
+          <span class="endpoint-desc">Delete a project and all its contents</span>
         </div>
       </div>
     </div>
@@ -538,32 +681,77 @@
       <h2>Artifacts</h2>
       <p class="section-desc"><strong>Artifacts are mini apps</strong> — web apps, dashboards, reports, and documents generated by the agent and hosted within a project. Each artifact belongs to a project.</p>
 
+      <p class="schema-label">Artifact object</p>
+      <div class="code-block" style="margin-bottom:24px">
+        <div class="code-header"><span class="code-lang">json</span></div>
+        <pre>{
+  <span class="hl">"id"</span>:          <span class="st">"art_abc123"</span>,
+  <span class="hl">"project_id"</span>:  <span class="st">"proj_xyz"</span>,
+  <span class="hl">"title"</span>:       <span class="st">"Sales Dashboard"</span>,
+  <span class="hl">"type"</span>:        <span class="st">"app"</span>,      <span class="cm">// "app" | "report" | "doc" | "dashboard"</span>
+  <span class="hl">"path"</span>:        <span class="st">"sales_dashboard/index.html"</span>,  <span class="cm">// relative path within project</span>
+  <span class="hl">"created_at"</span>:  <span class="st">"2026-06-11T10:00:00Z"</span>,
+  <span class="hl">"updated_at"</span>:  <span class="st">"2026-06-11T10:00:00Z"</span>
+}</pre>
+      </div>
+
       <div class="endpoint">
         <div class="endpoint-header">
           <span class="method get">GET</span>
           <span class="endpoint-path">/artifacts</span>
-          <span class="endpoint-desc">List artifacts (optionally filter by project)</span>
+          <span class="endpoint-desc">List artifacts</span>
+        </div>
+        <div class="endpoint-body">
+          <p class="schema-label">Query parameters</p>
+          <table class="params-table">
+            <tr><td class="p-name">project_id</td><td class="p-type">string</td><td class="p-req opt">optional</td><td class="p-desc">Filter to a project.</td></tr>
+            <tr><td class="p-name">type</td><td class="p-type">string</td><td class="p-req opt">optional</td><td class="p-desc"><code>app</code>, <code>report</code>, <code>doc</code>, or <code>dashboard</code>.</td></tr>
+            <tr><td class="p-name">limit</td><td class="p-type">integer</td><td class="p-req opt">optional</td><td class="p-desc">Default <code>50</code>.</td></tr>
+          </table>
         </div>
       </div>
+
       <div class="endpoint">
         <div class="endpoint-header">
           <span class="method get">GET</span>
           <span class="endpoint-path">/artifacts/preview</span>
           <span class="endpoint-desc">Preview an artifact by path</span>
         </div>
+        <div class="endpoint-body">
+          <p class="schema-label">Query parameters</p>
+          <table class="params-table">
+            <tr><td class="p-name">path</td><td class="p-type">string</td><td class="p-req req">required</td><td class="p-desc">Relative artifact path, e.g. <code>sales_dashboard/index.html</code>.</td></tr>
+            <tr><td class="p-name">project_id</td><td class="p-type">string</td><td class="p-req req">required</td><td class="p-desc">Project that owns the artifact.</td></tr>
+          </table>
+        </div>
       </div>
+
       <div class="endpoint">
         <div class="endpoint-header">
           <span class="method post">POST</span>
           <span class="endpoint-path">/artifacts/open</span>
           <span class="endpoint-desc">Open an artifact in the desktop shell</span>
         </div>
+        <div class="endpoint-body">
+          <p class="schema-label">Body</p>
+          <table class="params-table">
+            <tr><td class="p-name">artifact_id</td><td class="p-type">string</td><td class="p-req req">required</td><td class="p-desc">Artifact to open in the Electron window.</td></tr>
+          </table>
+        </div>
       </div>
+
       <div class="endpoint">
         <div class="endpoint-header">
           <span class="method get">GET</span>
-          <span class="endpoint-path">/artifacts/serve/{project}/{path}</span>
-          <span class="endpoint-desc">Serve an artifact file</span>
+          <span class="endpoint-path">/artifacts/serve/{project_id}/{path}</span>
+          <span class="endpoint-desc">Serve a raw artifact file</span>
+        </div>
+        <div class="endpoint-body">
+          <p class="schema-label">Path parameters</p>
+          <table class="params-table">
+            <tr><td class="p-name">project_id</td><td class="p-type">string</td><td class="p-req req">required</td><td class="p-desc">Project ID.</td></tr>
+            <tr><td class="p-name">path</td><td class="p-type">string</td><td class="p-req req">required</td><td class="p-desc">File path within the artifact, e.g. <code>index.html</code> or <code>assets/chart.js</code>.</td></tr>
+          </table>
         </div>
       </div>
     </div>
@@ -573,13 +761,38 @@
       <h2>Schedules</h2>
       <p class="section-desc">Run tasks on a cron schedule. Schedules belong to a project and trigger a conversation or workflow automatically.</p>
 
+      <p class="schema-label">Schedule object</p>
+      <div class="code-block" style="margin-bottom:24px">
+        <div class="code-header"><span class="code-lang">json</span></div>
+        <pre>{
+  <span class="hl">"id"</span>:              <span class="st">"sched_abc123"</span>,
+  <span class="hl">"project_id"</span>:      <span class="st">"proj_xyz"</span>,
+  <span class="hl">"cron"</span>:            <span class="st">"0 9 * * 1"</span>,       <span class="cm">// standard 5-field cron expression</span>
+  <span class="hl">"timezone"</span>:        <span class="st">"America/New_York"</span>,
+  <span class="hl">"prompt"</span>:          <span class="st">"Generate weekly sales digest"</span>,
+  <span class="hl">"conversation_id"</span>: <span class="st">null</span>,             <span class="cm">// null = create new conversation each run</span>
+  <span class="hl">"status"</span>:          <span class="st">"active"</span>,         <span class="cm">// "active" | "paused"</span>
+  <span class="hl">"last_run_at"</span>:     <span class="st">"2026-06-09T09:00:00Z"</span>,
+  <span class="hl">"next_run_at"</span>:     <span class="st">"2026-06-16T09:00:00Z"</span>,
+  <span class="hl">"created_at"</span>:      <span class="st">"2026-06-01T00:00:00Z"</span>
+}</pre>
+      </div>
+
       <div class="endpoint">
         <div class="endpoint-header">
           <span class="method get">GET</span>
           <span class="endpoint-path">/schedules</span>
           <span class="endpoint-desc">List schedules</span>
         </div>
+        <div class="endpoint-body">
+          <p class="schema-label">Query parameters</p>
+          <table class="params-table">
+            <tr><td class="p-name">project_id</td><td class="p-type">string</td><td class="p-req opt">optional</td><td class="p-desc">Filter to a project.</td></tr>
+            <tr><td class="p-name">status</td><td class="p-type">string</td><td class="p-req opt">optional</td><td class="p-desc"><code>active</code> or <code>paused</code>.</td></tr>
+          </table>
+        </div>
       </div>
+
       <div class="endpoint">
         <div class="endpoint-header">
           <span class="method post">POST</span>
@@ -587,28 +800,48 @@
           <span class="endpoint-desc">Create a schedule</span>
         </div>
         <div class="endpoint-body">
+          <p class="schema-label">Body</p>
+          <table class="params-table">
+            <tr><td class="p-name">project_id</td><td class="p-type">string</td><td class="p-req req">required</td><td class="p-desc">Project this schedule belongs to.</td></tr>
+            <tr><td class="p-name">cron</td><td class="p-type">string</td><td class="p-req req">required</td><td class="p-desc">Standard 5-field cron expression, e.g. <code>"0 9 * * 1"</code> = every Monday at 09:00.</td></tr>
+            <tr><td class="p-name">prompt</td><td class="p-type">string</td><td class="p-req req">required</td><td class="p-desc">Task the agent runs at each scheduled time.</td></tr>
+            <tr><td class="p-name">timezone</td><td class="p-type">string</td><td class="p-req opt">optional</td><td class="p-desc">IANA timezone. Default <code>UTC</code>.</td></tr>
+            <tr><td class="p-name">conversation_id</td><td class="p-type">string</td><td class="p-req opt">optional</td><td class="p-desc">Append each run to an existing conversation. If omitted, a new conversation is created per run.</td></tr>
+          </table>
           <div class="code-block">
             <div class="code-header"><span class="code-lang">curl</span></div>
             <pre><span class="hl">curl</span> -X POST http://localhost:26866/api/v1/schedules \
   -H <span class="st">"Content-Type: application/json"</span> \
-  -d <span class="st">'{"project_id": "...", "cron": "0 9 * * 1", "prompt": "Generate weekly sales digest"}'</span></pre>
+  -d <span class="st">'{"project_id":"proj_xyz","cron":"0 9 * * 1","prompt":"Generate weekly sales digest","timezone":"America/New_York"}'</span></pre>
           </div>
         </div>
       </div>
+
       <div class="endpoint">
         <div class="endpoint-header">
           <span class="method patch">PATCH</span>
           <span class="endpoint-path">/schedules/{id}</span>
           <span class="endpoint-desc">Update a schedule</span>
         </div>
+        <div class="endpoint-body">
+          <p class="schema-label">Body</p>
+          <table class="params-table">
+            <tr><td class="p-name">cron</td><td class="p-type">string</td><td class="p-req opt">optional</td><td class="p-desc">New cron expression.</td></tr>
+            <tr><td class="p-name">prompt</td><td class="p-type">string</td><td class="p-req opt">optional</td><td class="p-desc">Updated task prompt.</td></tr>
+            <tr><td class="p-name">timezone</td><td class="p-type">string</td><td class="p-req opt">optional</td><td class="p-desc">New timezone.</td></tr>
+            <tr><td class="p-name">status</td><td class="p-type">string</td><td class="p-req opt">optional</td><td class="p-desc"><code>active</code> or <code>paused</code>.</td></tr>
+          </table>
+        </div>
       </div>
+
       <div class="endpoint">
         <div class="endpoint-header">
           <span class="method post">POST</span>
-          <span class="endpoint-path">/schedules/{id}/pause</span>
-          <span class="endpoint-desc">Pause a schedule</span>
+          <span class="endpoint-path">/schedules/{id}/run</span>
+          <span class="endpoint-desc">Trigger a schedule immediately</span>
         </div>
       </div>
+
       <div class="endpoint">
         <div class="endpoint-header">
           <span class="method delete">DELETE</span>
@@ -623,20 +856,58 @@
       <h2>Files</h2>
       <p class="section-desc">Upload and manage files that the agent can read, search, and reference. Files can be attached to a project or to individual conversations.</p>
 
+      <p class="schema-label">File object</p>
+      <div class="code-block" style="margin-bottom:24px">
+        <div class="code-header"><span class="code-lang">json</span></div>
+        <pre>{
+  <span class="hl">"id"</span>:              <span class="st">"file_abc123"</span>,
+  <span class="hl">"name"</span>:            <span class="st">"Q2-report.pdf"</span>,
+  <span class="hl">"mime_type"</span>:       <span class="st">"application/pdf"</span>,
+  <span class="hl">"size"</span>:            <span class="st">204800</span>,           <span class="cm">// bytes</span>
+  <span class="hl">"project_id"</span>:      <span class="st">"proj_xyz"</span>,       <span class="cm">// null if conversation-scoped only</span>
+  <span class="hl">"conversation_id"</span>: <span class="st">null</span>,             <span class="cm">// null if project-scoped only</span>
+  <span class="hl">"created_at"</span>:      <span class="st">"2026-06-11T10:00:00Z"</span>
+}</pre>
+      </div>
+
       <div class="endpoint">
         <div class="endpoint-header">
           <span class="method get">GET</span>
           <span class="endpoint-path">/files</span>
-          <span class="endpoint-desc">List uploaded files</span>
+          <span class="endpoint-desc">List files</span>
+        </div>
+        <div class="endpoint-body">
+          <p class="schema-label">Query parameters</p>
+          <table class="params-table">
+            <tr><td class="p-name">project_id</td><td class="p-type">string</td><td class="p-req opt">optional</td><td class="p-desc">Filter to a project.</td></tr>
+            <tr><td class="p-name">conversation_id</td><td class="p-type">string</td><td class="p-req opt">optional</td><td class="p-desc">Filter to a conversation.</td></tr>
+          </table>
         </div>
       </div>
+
       <div class="endpoint">
         <div class="endpoint-header">
           <span class="method post">POST</span>
           <span class="endpoint-path">/files</span>
           <span class="endpoint-desc">Upload a file</span>
         </div>
+        <div class="endpoint-body">
+          <p>Multipart <code>form-data</code> upload.</p>
+          <p class="schema-label">Form fields</p>
+          <table class="params-table">
+            <tr><td class="p-name">file</td><td class="p-type">file</td><td class="p-req req">required</td><td class="p-desc">The file binary. Accepted: PDF, DOCX, XLSX, CSV, TXT, PNG, JPG, and more.</td></tr>
+            <tr><td class="p-name">project_id</td><td class="p-type">string</td><td class="p-req opt">optional</td><td class="p-desc">Attach to a project.</td></tr>
+            <tr><td class="p-name">conversation_id</td><td class="p-type">string</td><td class="p-req opt">optional</td><td class="p-desc">Attach to a conversation. Can be set alongside <code>project_id</code>.</td></tr>
+          </table>
+          <div class="code-block">
+            <div class="code-header"><span class="code-lang">curl</span></div>
+            <pre><span class="hl">curl</span> -X POST http://localhost:26866/api/v1/files \
+  -F <span class="st">"file=@Q2-report.pdf"</span> \
+  -F <span class="st">"project_id=proj_xyz"</span></pre>
+          </div>
+        </div>
       </div>
+
       <div class="endpoint">
         <div class="endpoint-header">
           <span class="method delete">DELETE</span>
@@ -649,7 +920,38 @@
     <!-- Connectors -->
     <div class="api-section" id="connectors">
       <h2>Connectors</h2>
-      <p class="section-desc">Integrate external data sources. Connectors exist independently of any project but can be referenced inside any project. They are defined by specs and instantiated as connections with encrypted credentials.</p>
+      <p class="section-desc">Integrate external data sources. Connectors exist independently of any project but can be referenced inside any project. They are defined by <strong>specs</strong> (the connector type, e.g. PostgreSQL, Snowflake, Google Sheets) and instantiated as <strong>connections</strong> with encrypted credentials. Credentials are write-only — never returned after creation.</p>
+
+      <p class="schema-label">ConnectorSpec object</p>
+      <div class="code-block" style="margin-bottom:24px">
+        <div class="code-header"><span class="code-lang">json</span></div>
+        <pre>{
+  <span class="hl">"id"</span>:           <span class="st">"postgres"</span>,
+  <span class="hl">"name"</span>:         <span class="st">"PostgreSQL"</span>,
+  <span class="hl">"description"</span>:  <span class="st">"Connect to any PostgreSQL-compatible database."</span>,
+  <span class="hl">"auth_type"</span>:    <span class="st">"credentials"</span>,  <span class="cm">// "credentials" | "oauth2"</span>
+  <span class="hl">"fields"</span>: [                       <span class="cm">// credential fields required at connection time</span>
+    { <span class="hl">"key"</span>: <span class="st">"host"</span>,     <span class="hl">"label"</span>: <span class="st">"Host"</span>,     <span class="hl">"secret"</span>: <span class="st">false</span> },
+    { <span class="hl">"key"</span>: <span class="st">"port"</span>,     <span class="hl">"label"</span>: <span class="st">"Port"</span>,     <span class="hl">"secret"</span>: <span class="st">false</span> },
+    { <span class="hl">"key"</span>: <span class="st">"database"</span>, <span class="hl">"label"</span>: <span class="st">"Database"</span>, <span class="hl">"secret"</span>: <span class="st">false</span> },
+    { <span class="hl">"key"</span>: <span class="st">"user"</span>,     <span class="hl">"label"</span>: <span class="st">"User"</span>,     <span class="hl">"secret"</span>: <span class="st">false</span> },
+    { <span class="hl">"key"</span>: <span class="st">"password"</span>, <span class="hl">"label"</span>: <span class="st">"Password"</span>, <span class="hl">"secret"</span>: <span class="st">true</span>  }
+  ]
+}</pre>
+      </div>
+
+      <p class="schema-label">Connection object</p>
+      <div class="code-block" style="margin-bottom:24px">
+        <div class="code-header"><span class="code-lang">json</span></div>
+        <pre>{
+  <span class="hl">"id"</span>:         <span class="st">"conn_abc123"</span>,
+  <span class="hl">"spec_id"</span>:    <span class="st">"postgres"</span>,       <span class="cm">// which ConnectorSpec this uses</span>
+  <span class="hl">"name"</span>:       <span class="st">"prod-db"</span>,
+  <span class="hl">"status"</span>:     <span class="st">"connected"</span>,      <span class="cm">// "connected" | "error" | "pending"</span>
+  <span class="hl">"created_at"</span>: <span class="st">"2026-06-11T10:00:00Z"</span>
+  <span class="cm">// credentials are never returned</span>
+}</pre>
+      </div>
 
       <div class="endpoint">
         <div class="endpoint-header">
@@ -657,45 +959,117 @@
           <span class="endpoint-path">/connectors/specs</span>
           <span class="endpoint-desc">List available connector specs</span>
         </div>
+        <div class="endpoint-body">
+          <div class="code-block">
+            <div class="code-header"><span class="code-lang">curl</span></div>
+            <pre><span class="hl">curl</span> <span class="st">"http://localhost:26866/api/v1/connectors/specs"</span></pre>
+          </div>
+        </div>
       </div>
+
       <div class="endpoint">
         <div class="endpoint-header">
           <span class="method get">GET</span>
           <span class="endpoint-path">/connectors/connections</span>
           <span class="endpoint-desc">List active connections</span>
         </div>
+        <div class="endpoint-body">
+          <p class="schema-label">Query parameters</p>
+          <table class="params-table">
+            <tr><td class="p-name">spec_id</td><td class="p-type">string</td><td class="p-req opt">optional</td><td class="p-desc">Filter by connector type (e.g. <code>postgres</code>).</td></tr>
+          </table>
+        </div>
       </div>
+
       <div class="endpoint">
         <div class="endpoint-header">
           <span class="method post">POST</span>
           <span class="endpoint-path">/connectors/connections</span>
           <span class="endpoint-desc">Create a connection</span>
         </div>
+        <div class="endpoint-body">
+          <p class="schema-label">Body</p>
+          <table class="params-table">
+            <tr><td class="p-name">spec_id</td><td class="p-type">string</td><td class="p-req req">required</td><td class="p-desc">The connector spec to use (e.g. <code>"postgres"</code>).</td></tr>
+            <tr><td class="p-name">name</td><td class="p-type">string</td><td class="p-req req">required</td><td class="p-desc">Human-readable label for this connection.</td></tr>
+            <tr><td class="p-name">credentials</td><td class="p-type">object</td><td class="p-req req">required</td><td class="p-desc">Key-value map of credential fields defined by the spec. Secret fields are encrypted at rest and never returned.</td></tr>
+          </table>
+          <div class="code-block">
+            <div class="code-header"><span class="code-lang">curl</span></div>
+            <pre><span class="hl">curl</span> -X POST <span class="st">"http://localhost:26866/api/v1/connectors/connections"</span> \
+  -H <span class="st">"Content-Type: application/json"</span> \
+  -d <span class="st">'{
+    "spec_id": "postgres",
+    "name": "prod-db",
+    "credentials": {
+      "host": "db.example.com",
+      "port": 5432,
+      "database": "analytics",
+      "user": "reader",
+      "password": "s3cr3t"
+    }
+  }'</span></pre>
+          </div>
+        </div>
       </div>
+
+      <div class="endpoint">
+        <div class="endpoint-header">
+          <span class="method delete">DELETE</span>
+          <span class="endpoint-path">/connectors/connections/{id}</span>
+          <span class="endpoint-desc">Remove a connection</span>
+        </div>
+      </div>
+
       <div class="endpoint">
         <div class="endpoint-header">
           <span class="method get">GET</span>
           <span class="endpoint-path">/connectors/oauth/{spec}/start</span>
-          <span class="endpoint-desc">Start OAuth flow for a connector</span>
+          <span class="endpoint-desc">Start OAuth 2.0 flow</span>
+        </div>
+        <div class="endpoint-body">
+          <p>Returns a redirect URL. Send the user's browser there; after authorization the platform receives the callback and stores the token automatically.</p>
+          <p class="schema-label">Path parameter</p>
+          <table class="params-table">
+            <tr><td class="p-name">spec</td><td class="p-type">string</td><td class="p-req req">required</td><td class="p-desc">The connector spec ID (e.g. <code>google-sheets</code>, <code>notion</code>).</td></tr>
+          </table>
         </div>
       </div>
     </div>
 
-    <!-- Search -->
+    <!-- Memories -->
     <div class="api-section" id="memories">
       <h2>Memories</h2>
-      <p class="section-desc">Persistent facts and context the agent retains across conversations. Memories can be <strong>global</strong> (shared across all projects) or <strong>project-scoped</strong> — omit <code>project_id</code> to create a global memory.</p>
+      <p class="section-desc">Persistent facts and context the agent retains across conversations. Memories can be <strong>global</strong> (shared across all projects and conversations) or <strong>project-scoped</strong> — omit <code>project_id</code> to create a global memory. The agent automatically surfaces relevant memories as context at the start of each conversation.</p>
+
+      <p class="schema-label">Memory object</p>
+      <div class="code-block" style="margin-bottom:24px">
+        <div class="code-header"><span class="code-lang">json</span></div>
+        <pre>{
+  <span class="hl">"id"</span>:           <span class="st">"mem_abc123"</span>,
+  <span class="hl">"content"</span>:      <span class="st">"Prefers executive summaries under 200 words."</span>,
+  <span class="hl">"project_id"</span>:   <span class="st">null</span>,            <span class="cm">// null = global; string = project-scoped</span>
+  <span class="hl">"source"</span>:       <span class="st">"user"</span>,          <span class="cm">// "user" | "agent" — who created it</span>
+  <span class="hl">"created_at"</span>:   <span class="st">"2026-06-11T10:00:00Z"</span>,
+  <span class="hl">"updated_at"</span>:   <span class="st">"2026-06-11T10:00:00Z"</span>
+}</pre>
+      </div>
 
       <div class="endpoint">
         <div class="endpoint-header">
           <span class="method get">GET</span>
           <span class="endpoint-path">/memories</span>
-          <span class="endpoint-desc">List memories — optionally filter by project</span>
+          <span class="endpoint-desc">List memories</span>
         </div>
         <div class="endpoint-body">
+          <p class="schema-label">Query parameters</p>
+          <table class="params-table">
+            <tr><td class="p-name">project_id</td><td class="p-type">string</td><td class="p-req opt">optional</td><td class="p-desc">Return memories scoped to this project. Omit to return global memories.</td></tr>
+            <tr><td class="p-name">source</td><td class="p-type">string</td><td class="p-req opt">optional</td><td class="p-desc">Filter by who created it: <code>user</code> or <code>agent</code>.</td></tr>
+          </table>
           <div class="code-block">
             <div class="code-header"><span class="code-lang">curl</span></div>
-            <pre><span class="hl">curl</span> <span class="st">"http://localhost:26866/api/v1/memories"</span>              <span class="cm"># global</span>
+            <pre><span class="hl">curl</span> <span class="st">"http://localhost:26866/api/v1/memories"</span>               <span class="cm"># global</span>
 <span class="hl">curl</span> <span class="st">"http://localhost:26866/api/v1/memories?project_id=..."</span>  <span class="cm"># project-scoped</span></pre>
           </div>
         </div>
@@ -708,14 +1082,16 @@
           <span class="endpoint-desc">Create a memory</span>
         </div>
         <div class="endpoint-body">
+          <p class="schema-label">Body</p>
+          <table class="params-table">
+            <tr><td class="p-name">content</td><td class="p-type">string</td><td class="p-req req">required</td><td class="p-desc">The fact or preference to remember. Plain text.</td></tr>
+            <tr><td class="p-name">project_id</td><td class="p-type">string</td><td class="p-req opt">optional</td><td class="p-desc">Scope to a project. Omit for a global memory.</td></tr>
+          </table>
           <div class="code-block">
             <div class="code-header"><span class="code-lang">curl</span></div>
             <pre><span class="hl">curl</span> -X POST <span class="st">"http://localhost:26866/api/v1/memories"</span> \
   -H <span class="st">"Content-Type: application/json"</span> \
-  -d <span class="st">'{"content":"Prefers executive summaries under 200 words."}'</span>              <span class="cm"># global</span>
-<span class="hl">curl</span> -X POST <span class="st">"http://localhost:26866/api/v1/memories"</span> \
-  -H <span class="st">"Content-Type: application/json"</span> \
-  -d <span class="st">'{"project_id":"...","content":"Always use Q3 targets as the baseline."}'</span>  <span class="cm"># project-scoped</span></pre>
+  -d <span class="st">'{"content": "Always use Q3 targets as the baseline.", "project_id": "proj_xyz"}'</span></pre>
           </div>
         </div>
       </div>
@@ -723,15 +1099,21 @@
       <div class="endpoint">
         <div class="endpoint-header">
           <span class="method patch">PATCH</span>
-          <span class="endpoint-path">/memories/{memory_id}</span>
+          <span class="endpoint-path">/memories/{id}</span>
           <span class="endpoint-desc">Update a memory</span>
+        </div>
+        <div class="endpoint-body">
+          <p class="schema-label">Body</p>
+          <table class="params-table">
+            <tr><td class="p-name">content</td><td class="p-type">string</td><td class="p-req opt">optional</td><td class="p-desc">Updated text for the memory.</td></tr>
+          </table>
         </div>
       </div>
 
       <div class="endpoint">
         <div class="endpoint-header">
           <span class="method delete">DELETE</span>
-          <span class="endpoint-path">/memories/{memory_id}</span>
+          <span class="endpoint-path">/memories/{id}</span>
           <span class="endpoint-desc">Delete a memory</span>
         </div>
       </div>
@@ -740,6 +1122,23 @@
     <div class="api-section" id="skills">
       <h2>Skills</h2>
       <p class="section-desc">Reusable capabilities available globally across all projects — custom instructions, tools, or prompt templates the agent can invoke. Skills extend what the agent knows how to do without re-explaining it each time. Like Connectors, they exist independently of any single project.</p>
+
+      <p class="schema-label">Skill object</p>
+      <div class="code-block" style="margin-bottom:24px">
+        <div class="code-header"><span class="code-lang">json</span></div>
+        <pre>{
+  <span class="hl">"id"</span>:            <span class="st">"skill_abc123"</span>,
+  <span class="hl">"name"</span>:          <span class="st">"weekly-report"</span>,
+  <span class="hl">"description"</span>:   <span class="st">"Generates a weekly performance report from connected data sources."</span>,
+  <span class="hl">"instructions"</span>:  <span class="st">"Always include a one-paragraph executive summary first. Use bullet points for metrics..."</span>,
+  <span class="hl">"tools"</span>: [        <span class="cm">// external tool integrations this skill may invoke</span>
+    <span class="st">"sql_query"</span>,
+    <span class="st">"send_email"</span>
+  ],
+  <span class="hl">"created_at"</span>:    <span class="st">"2026-06-11T10:00:00Z"</span>,
+  <span class="hl">"updated_at"</span>:    <span class="st">"2026-06-11T10:00:00Z"</span>
+}</pre>
+      </div>
 
       <div class="endpoint">
         <div class="endpoint-header">
@@ -762,11 +1161,23 @@
           <span class="endpoint-desc">Register a skill</span>
         </div>
         <div class="endpoint-body">
+          <p class="schema-label">Body</p>
+          <table class="params-table">
+            <tr><td class="p-name">name</td><td class="p-type">string</td><td class="p-req req">required</td><td class="p-desc">Kebab-case identifier. Used to invoke the skill from a conversation.</td></tr>
+            <tr><td class="p-name">description</td><td class="p-type">string</td><td class="p-req req">required</td><td class="p-desc">Short summary of what this skill does. Shown in the UI and used by the agent to decide whether to invoke it.</td></tr>
+            <tr><td class="p-name">instructions</td><td class="p-type">string</td><td class="p-req opt">optional</td><td class="p-desc">Detailed prompt injected whenever this skill is active. Explains how to carry out the task, preferred format, constraints, etc.</td></tr>
+            <tr><td class="p-name">tools</td><td class="p-type">string[]</td><td class="p-req opt">optional</td><td class="p-desc">List of tool identifiers the agent may call when running this skill (e.g. <code>"sql_query"</code>, <code>"send_email"</code>).</td></tr>
+          </table>
           <div class="code-block">
             <div class="code-header"><span class="code-lang">curl</span></div>
             <pre><span class="hl">curl</span> -X POST <span class="st">"http://localhost:26866/api/v1/skills"</span> \
   -H <span class="st">"Content-Type: application/json"</span> \
-  -d <span class="st">'{"name":"weekly-report","description":"Generates a weekly performance report from connected data sources."}'</span></pre>
+  -d <span class="st">'{
+    "name": "weekly-report",
+    "description": "Generates a weekly performance report.",
+    "instructions": "Always start with an executive summary. Limit to 3 charts.",
+    "tools": ["sql_query", "send_email"]
+  }'</span></pre>
           </div>
         </div>
       </div>
@@ -774,15 +1185,24 @@
       <div class="endpoint">
         <div class="endpoint-header">
           <span class="method patch">PATCH</span>
-          <span class="endpoint-path">/skills/{skill_id}</span>
+          <span class="endpoint-path">/skills/{id}</span>
           <span class="endpoint-desc">Update a skill</span>
+        </div>
+        <div class="endpoint-body">
+          <p class="schema-label">Body</p>
+          <table class="params-table">
+            <tr><td class="p-name">name</td><td class="p-type">string</td><td class="p-req opt">optional</td><td class="p-desc">New identifier.</td></tr>
+            <tr><td class="p-name">description</td><td class="p-type">string</td><td class="p-req opt">optional</td><td class="p-desc">Updated summary.</td></tr>
+            <tr><td class="p-name">instructions</td><td class="p-type">string</td><td class="p-req opt">optional</td><td class="p-desc">Revised prompt instructions.</td></tr>
+            <tr><td class="p-name">tools</td><td class="p-type">string[]</td><td class="p-req opt">optional</td><td class="p-desc">Replace the full list of allowed tools.</td></tr>
+          </table>
         </div>
       </div>
 
       <div class="endpoint">
         <div class="endpoint-header">
           <span class="method delete">DELETE</span>
-          <span class="endpoint-path">/skills/{skill_id}</span>
+          <span class="endpoint-path">/skills/{id}</span>
           <span class="endpoint-desc">Delete a skill</span>
         </div>
       </div>
@@ -958,7 +1378,20 @@
 
     <div class="api-section" id="search">
       <h2>Search</h2>
-      <p class="section-desc">Full-text and semantic search across conversations, files, and memory.</p>
+      <p class="section-desc">Full-text and semantic search across conversations, artifacts, files, and memories. Returns ranked results with the matching resource type and a short excerpt.</p>
+
+      <p class="schema-label">SearchResult object</p>
+      <div class="code-block" style="margin-bottom:24px">
+        <div class="code-header"><span class="code-lang">json</span></div>
+        <pre>{
+  <span class="hl">"type"</span>:       <span class="st">"conversation"</span>,   <span class="cm">// "conversation" | "artifact" | "file" | "memory"</span>
+  <span class="hl">"id"</span>:         <span class="st">"conv_abc123"</span>,
+  <span class="hl">"title"</span>:      <span class="st">"Sales forecast Q3"</span>,
+  <span class="hl">"excerpt"</span>:    <span class="st">"...the Q3 sales forecast shows a 12% increase over..."</span>,
+  <span class="hl">"score"</span>:      <span class="st">0.93</span>,             <span class="cm">// relevance score 0–1</span>
+  <span class="hl">"project_id"</span>: <span class="st">"proj_xyz"</span>        <span class="cm">// null for global results</span>
+}</pre>
+      </div>
 
       <div class="endpoint">
         <div class="endpoint-header">
@@ -967,9 +1400,34 @@
           <span class="endpoint-desc">Search across the workspace</span>
         </div>
         <div class="endpoint-body">
+          <p class="schema-label">Query parameters</p>
+          <table class="params-table">
+            <tr><td class="p-name">q</td><td class="p-type">string</td><td class="p-req req">required</td><td class="p-desc">The search query. Supports natural language and keyword matching.</td></tr>
+            <tr><td class="p-name">project_id</td><td class="p-type">string</td><td class="p-req opt">optional</td><td class="p-desc">Limit results to a single project.</td></tr>
+            <tr><td class="p-name">types</td><td class="p-type">string[]</td><td class="p-req opt">optional</td><td class="p-desc">Comma-separated list of resource types to include: <code>conversation</code>, <code>artifact</code>, <code>file</code>, <code>memory</code>. Defaults to all.</td></tr>
+            <tr><td class="p-name">limit</td><td class="p-type">integer</td><td class="p-req opt">optional</td><td class="p-desc">Maximum results to return. Defaults to <code>20</code>, max <code>100</code>.</td></tr>
+          </table>
           <div class="code-block">
             <div class="code-header"><span class="code-lang">curl</span></div>
-            <pre><span class="hl">curl</span> <span class="st">"http://localhost:26866/api/v1/search?q=sales+forecast&project_id=..."</span></pre>
+            <pre><span class="hl">curl</span> <span class="st">"http://localhost:26866/api/v1/search?q=sales+forecast&project_id=proj_xyz&types=conversation,file&limit=10"</span></pre>
+          </div>
+
+          <p class="schema-label">Response</p>
+          <div class="code-block">
+            <div class="code-header"><span class="code-lang">json</span></div>
+            <pre>{
+  <span class="hl">"results"</span>: [
+    {
+      <span class="hl">"type"</span>:       <span class="st">"conversation"</span>,
+      <span class="hl">"id"</span>:         <span class="st">"conv_abc123"</span>,
+      <span class="hl">"title"</span>:      <span class="st">"Sales forecast Q3"</span>,
+      <span class="hl">"excerpt"</span>:    <span class="st">"...the Q3 sales forecast shows a 12% increase over..."</span>,
+      <span class="hl">"score"</span>:      <span class="st">0.93</span>,
+      <span class="hl">"project_id"</span>: <span class="st">"proj_xyz"</span>
+    }
+  ],
+  <span class="hl">"total"</span>: 1
+}</pre>
           </div>
         </div>
       </div>
