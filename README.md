@@ -24,8 +24,7 @@
 </div>
 
 
-
-<img width="780" height="475" alt="cowork-select" src="https://github.com/user-attachments/assets/40ca52fc-df7c-4385-8571-828283fb3033" />
+<img width="1198" height="697" alt="image" src="https://github.com/user-attachments/assets/769e6463-0a9d-45ae-83d1-ef9e234775d3" />
 
 
 # MINDS-COWORK PLATFORM 
